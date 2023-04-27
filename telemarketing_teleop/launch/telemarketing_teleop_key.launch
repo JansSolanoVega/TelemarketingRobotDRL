@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="telemarketing_teleop" type="telemarketing_teleop_key.py" name="telemarketing_teleop_keyboard"  output="screen">
+  </node>
+</launch>

@@ -1,0 +1,36 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find telemarketing_navigation)/maps/mymap.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="false"/>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <!-- AMCL -->
+  <include file="$(find telemarketing_navigation)/launch/amcl.launch"/>
+
+  <!-- move_base -->
+  <include file="$(find telemarketing_navigation)/launch/move_base_teb.launch">
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find telemarketing_navigation)/rviz/telemarketing_navigation.rviz"/>
+  </group>
+  
+  <!--package to run automatic navigation stack for predefined goals-->
+  <node pkg="telemarketing_navigation" type="move_base_seq.py" name="move_base_seq" output="screen">
+  <!-- Load Sequence of Points (Cartesian Coordinates wrt "map" RF, in meters) -->
+      <rosparam param="p_seq">[2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0,2,-13,0,2,-3,0]</rosparam>
+  <!-- Load Sequence of Desired Yaw Angles (no rotations around x and y axes) in degrees-->
+      <rosparam param="yea_seq">[-90,90,-90,90,-90,90,-90,90,-90,90,-90,90,-90,90,-90,90,-90,90,-90,90,-90]</rosparam>
+  </node> 
+
+  <!--package of laser filters-->
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter">
+    <rosparam command="load" file="$(find laser_filters)/examples/range_filter.yaml" />
+  </node>
+</launch>

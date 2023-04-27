@@ -1,0 +1,9 @@
+<launch>
+        <node pkg="telemarketing_navigation" type="move_base_seq.py" name="move_base_seq" output="screen">
+        <!-- Load Sequence of Points (Cartesian Coordinates wrt "map" RF, in meters) -->
+            <rosparam param="p_seq">[2,-13,0,2,-3,0]</rosparam>
+        <!-- Load Sequence of Desired Yaw Angles (no rotations around x and y axes) in degrees-->
+            <rosparam param="yea_seq">[90,-90]</rosparam>
+        </node>
+
+</launch>

@@ -1,0 +1,53 @@
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find telemarketing_navigation)/maps/mymap.yaml"/>
+  <arg name="open_rviz" default="true"/>
+  <arg name="move_forward_only" default="true"/>
+  
+  <arg name="algoritmoNavegacion" default="mpc"/>
+  <arg name="numero_intentos" default="10"/>
+
+  <arg name="numero_obstaculos" default="0"/>
+  <arg name="velocidad" default="0.3"/>
+  <arg name="tipo_movimiento" default="4_MundoVacio"/>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
+
+  <!-- AMCL -->
+  <include file="$(find telemarketing_navigation)/launch/amcl.launch"/>
+
+  <!-- move_base -->
+  <include file="$(find telemarketing_navigation)/launch/move_base_$(arg algoritmoNavegacion).launch">
+    <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+  </include>
+
+  <!-- rviz -->
+  <group if="$(arg open_rviz)"> 
+    <node pkg="rviz" type="rviz" name="rviz" required="true"
+          args="-d $(find telemarketing_navigation)/rviz/$(arg algoritmoNavegacion)_telemarketing_navigation.rviz"/>
+  </group>
+  
+  <!--package to run automatic navigation stack for predefined goals-->
+  <node pkg="telemarketing_navigation" type="move_base_seq_mpc.py" name="move_base_seq" output="screen">
+      <rosparam param="p_inicial">[0,-10,0]</rosparam>
+      <rosparam param="p_final">[-10,9,0]</rosparam>
+      <rosparam param="angle_sequence">[90,0]</rosparam>
+      <param name="numero_intentos" type="double" value="$(arg numero_intentos)" />
+  </node> 
+
+  <!--package to run testing procedute to evaluate the navigation-->
+  <node pkg="telemarketing_navigation" type="MetodologiaFinalCSV.py" name="MetodologiaFinalCSV" output="screen">
+    <param name="filename" type="str" value="$(arg algoritmoNavegacion)_$(arg velocidad)" />
+    <param name="numero_intentos" type="double" value="$(arg numero_intentos)" />
+    <param name="navegador" type="str" value="$(arg algoritmoNavegacion)"/>
+    <param name="numero_obstaculos" type="int" value="$(arg numero_obstaculos)"/>
+    <param name="tipo_movimiento" type="str" value="$(arg tipo_movimiento)"/>
+
+  </node> 
+
+  <!--package of laser filters-->
+  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter">
+    <rosparam command="load" file="$(find laser_filters)/examples/range_filter.yaml" />
+  </node>
+</launch>

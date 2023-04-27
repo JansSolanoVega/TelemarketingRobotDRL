@@ -1,0 +1,155 @@
+<?xml version="1.0" ?>
+<robot name="telemarketing" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+
+<xacro:property name="body_color" value="Gazebo/White" />
+<xacro:property name="screen_color" value="Gazebo/DarkGrey" />
+<xacro:property name="sensor_color" value="Gazebo/Blue" />
+<xacro:property name="wheels_color" value="Gazebo/Black" />
+
+<gazebo>
+  <plugin name="control" filename="libgazebo_ros_control.so"/>
+</gazebo>
+<gazebo reference="base_link">
+  <material>${body_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+  <gravity>true</gravity>
+</gazebo>
+
+<gazebo reference="lidar_1">
+  <material>${sensor_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="ur_caster_1">
+  <material>${wheels_color}</material>
+  <mu1>0</mu1>
+  <mu2>0</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="bl_caster_1">
+  <material>${wheels_color}</material>
+  <mu1>0</mu1>
+  <mu2>0</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="ul_caster_1">
+  <material>${wheels_color}</material>
+  <mu1>0</mu1>
+  <mu2>0</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="br_caster_1">
+  <material>${wheels_color}</material>
+  <mu1>0</mu1>
+  <mu2>0</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="monitor1_1">
+  <material>${wheels_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="monitor2_1">
+  <material>${screen_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="rwheel_1">
+  <material>${wheels_color}</material>
+  <mu1>10</mu1>
+  <mu2>10</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="lwheel_1">
+  <material>${wheels_color}</material>
+  <mu1>10</mu1>
+  <mu2>10</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="real_sense_1">
+  <material>${sensor_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+<gazebo reference="screen_1">
+  <material>${screen_color}</material>
+  <mu1>0.2</mu1>
+  <mu2>0.2</mu2>
+  <selfCollide>true</selfCollide>
+</gazebo>
+
+
+<gazebo>
+  <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+    <commandTopic>cmd_vel</commandTopic>
+    <odometryTopic>odom</odometryTopic>
+    <odometryFrame>odom</odometryFrame>
+    <odometrySource>world</odometrySource>
+    <publishOdomTF>true</publishOdomTF>
+    <robotBaseFrame>base_footprint</robotBaseFrame>
+    <publishWheelTF>false</publishWheelTF>
+    <publishTf>true</publishTf>
+    <publishWheelJointState>true</publishWheelJointState>
+    <legacyMode>false</legacyMode>
+    <updateRate>30</updateRate>
+    <leftJoint>left_motor</leftJoint>
+    <rightJoint>right_motor</rightJoint>
+    <wheelSeparation>0.3494</wheelSeparation>
+    <wheelDiameter>0.2012</wheelDiameter>
+    <wheelAcceleration>1</wheelAcceleration>
+    <wheelTorque>10</wheelTorque>
+    <rosDebugLevel>na</rosDebugLevel>
+  </plugin>
+</gazebo>
+
+
+<gazebo reference="lidar_1">
+  <material>Gazebo/FlatBlack</material>
+  <sensor type="ray" name="lds_lfcd_sensor">
+    <pose>0 0 0 0 0 0</pose>
+    <visualize>true</visualize>
+    <update_rate>5</update_rate>
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>360</samples>
+          <resolution>1</resolution>
+          <min_angle>-2.1</min_angle>
+          <max_angle>2.1</max_angle>
+        </horizontal>
+      </scan>
+      <range>
+        <min>0.2</min>
+        <max>10</max>
+        <resolution>0.015</resolution>
+      </range>
+      <noise>
+        <type>gaussian</type>
+        <mean>0.0</mean>
+        <stddev>0.01</stddev>
+      </noise>
+    </ray>
+    <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+      <topicName>scan</topicName>
+      <frameName>lidar_1</frameName>
+    </plugin>
+  </sensor>
+</gazebo>
+
+</robot>
