@@ -28,6 +28,7 @@ class DRL_test:
             self.model = PPO2.load(path_temp_model)
         
         self.eval_model()
+        rospy.spin()
         
     def read_laser_data_gazebo(self, data):
         self.ranges = np.array(data.ranges)
@@ -62,8 +63,24 @@ class DRL_test:
                 obs.append(self.distance_to_goal);obs.append(self.angle_to_goal)
                 obs = np.reshape(obs, (1, 1, 362))
                 action, _ = list(self.model.predict(obs))
-                twist.linear.x = action[0][0]; twist.linear.y = 0.0; twist.linear.z = 0.0
-                twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = action[0][1]
+                
+                if self.continuous_space:
+                    twist.linear.x = action[0][0]; twist.linear.y = 0.0; twist.linear.z = 0.0
+                    twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = action[0][1]
+                else:
+                    action_discrete_map = {
+                        "forward": [0.4, 0],
+                        "left": [0.3, 0.3],
+                        "right": [0.3, -0.3],
+                        "strong_left": [0, 0.6],
+                        "strong_right": [0, -0.6],
+                        "backward": [-0.4, 0],
+                        "stop": [0, 0]
+                    }
+                    list_actions = list(action_discrete_map.items())
+                    twist.linear.x = list_actions[action[0]][1][0]; twist.linear.y = 0.0; twist.linear.z = 0.0
+                    twist.angular.x = 0.0; twist.angular.y = 0.0; twist.angular.z = list_actions[action[0]][1][1]
+
                 #print("Time executing model: ", time.time()-a)
                 self.pub.publish(twist) 
                 t_anterior=time.time()     
@@ -75,9 +92,9 @@ class DRL_test:
 
 if __name__ == '__main__':
     try:
-        algo = DRL_test(path_temp_model="best_model_PPO2_EmptyEnvironmentContinuous_RestartHit", algorithm="PPO2",#best_model_a2c_laser_corrected
-                    continuous_actions=1, goal=(4,2))
-        rospy.spin()
+        algo = DRL_test(path_temp_model="best_model_dynamic_obstacles", algorithm="A2C",#best_model_a2c_laser_corrected
+                    continuous_actions=1, goal=(2,4))
+        
     except rospy.ROSInterruptException:
         pass
     
