@@ -1,0 +1,29 @@
+telemarketing: #namespace
+
+    n_actions: 7 # We have 7 actions ["forward", "left", "right", "strong_left", "strong_right", "backward", "stop"]
+    n_observations: 362 #We have 362 different observations
+
+    speed_step: 1.0 # Time to wait in the reset phases
+
+    max_linear_speed: 0.4 
+    linear_speed_turning: 0.3 #turning: RObot is turning to one side but not with its max angular speed
+    max_angular_speed: 0.6
+    angular_speed_turning: 0.3
+    init_linear_forward_speed: 0.0 # Initial linear speed in which we start each episode
+    init_linear_turn_speed: 0.0 # Initial angular speed in shich we start each episode
+
+    max_laser_distance: 10.0
+    min_laser_distance_for_crashing: 0.3
+    
+    desired_pose:
+      x: 5.0
+      y: 0.0
+      z: 0.0
+
+    reward_goal: 100.0 
+    reward_towards_goal: 0.1 
+    reward_away_from_goal: -0.2
+    reward_hit: -10.0
+    reward_time_out: 0.0 
+    reverse_reward: -100.0
+
