@@ -50,7 +50,7 @@ class DRL_test:
         if self.angular_error>180:
             self.angular_error=-(360-self.angular_error)
         print(self.x, self.y)
-        print("Distancia: ", self.distance_to_goal)
+        #print("Distancia: ", self.distance_to_goal)
         #print("Error posicion angular: ", self.angular_error)
         #print("time executing odometry: ",time.time()-a)
     def eval_model(self):
@@ -60,7 +60,7 @@ class DRL_test:
             #a=time.time()
             if (time.time()-t_anterior)>0.1:
                 obs = self.ranges.copy()
-                obs.append(self.distance_to_goal);obs.append(self.angle_to_goal)
+                obs.append(self.distance_to_goal);obs.append(self.angular_error)
                 obs = np.reshape(obs, (1, 1, 362))
                 action, _ = list(self.model.predict(obs))
                 
@@ -92,8 +92,8 @@ class DRL_test:
 
 if __name__ == '__main__':
     try:
-        algo = DRL_test(path_temp_model="best_model_dynamic_obstacles", algorithm="A2C",#best_model_a2c_laser_corrected
-                    continuous_actions=1, goal=(2,4))
+        algo = DRL_test(path_temp_model="best_model_PPO2_EmptyEnvironmentContinuous_RestartHit_ReverseReward_100", algorithm="A2C",#best_model_a2c_laser_corrected
+                    continuous_actions=0, goal=(8,-3))
         
     except rospy.ROSInterruptException:
         pass

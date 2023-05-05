@@ -1,11 +1,14 @@
 import rospy
-import numpy
+import numpy as np
+import math
+from tf.transformations import euler_from_quaternion
 from gym import spaces
-from openai_ros.robot_envs import telemarketing_env
+
 from gym.envs.registration import register
 from geometry_msgs.msg import Point
 from openai_ros.task_envs.task_commons import LoadYamlFileParamsTest
 from openai_ros.openai_ros_common import ROSLauncher
+from openai_ros.robot_envs import telemarketing_env
 
 timestep_limit_per_episode = 10000 # Can be any Value
 
@@ -23,39 +26,28 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         # ROSLauncher(rospackage_name="telemarketing_description",
         #             launch_file_name="gazebo.launch",
         #             ros_ws_abspath = rospy.get_param("/telemarketing/ros_ws_abspath", None))
+         # Here we will add any init functions prior to starting the MyRobotEnv
+
+        ros_ws_abspath = rospy.get_param("/telemarketing/ros_ws_abspath", None)
+        super(TelemarketingEmptyEnv, self).__init__(ros_ws_abspath)
 
         # Only variable needed to be set here
         number_actions = rospy.get_param('/telemarketing/n_actions')
         self.action_space = spaces.Discrete(number_actions)
         
         # We set the reward range, which is not compulsory but here we do it.
-        self.reward_range = (-numpy.inf, numpy.inf)
-        
-        
-        #number_observations = rospy.get_param('/turtlebot2/n_observations')
-        """
-        We set the Observation space for the 6 observations
-        cube_observations = [
-            round(current_disk_roll_vel, 0),
-            round(y_distance, 1),
-            round(roll, 1),
-            round(pitch, 1),
-            round(y_linear_speed,1),
-            round(yaw, 1),
-        ]
-        """
+        self.reward_range = (-np.inf, np.inf)
         
         # Actions and Observations
-        self.linear_forward_speed = rospy.get_param('/telemarketing/linear_forward_speed')
-        self.linear_turn_speed = rospy.get_param('/telemarketing/linear_turn_speed')
-        self.angular_speed = rospy.get_param('/telemarketing/angular_speed')
+        self.max_linear_speed = rospy.get_param('/telemarketing/max_linear_speed')
+        self.linear_speed_turning = rospy.get_param('/telemarketing/linear_speed_turning')
+        self.max_angular_speed = rospy.get_param('/telemarketing/max_angular_speed')
+        self.angular_speed_turning = rospy.get_param('/telemarketing/angular_speed_turning')
         self.init_linear_forward_speed = rospy.get_param('/telemarketing/init_linear_forward_speed')
         self.init_linear_turn_speed = rospy.get_param('/telemarketing/init_linear_turn_speed')
-        
-        self.new_ranges = rospy.get_param('/telemarketing/new_ranges')
-        self.min_range = rospy.get_param('/telemarketing/min_range')
-        self.max_laser_value = rospy.get_param('/telemarketing/max_laser_value')
-        self.min_laser_value = rospy.get_param('/telemarketing/min_laser_value')
+
+        self.max_laser_distance = rospy.get_param('/telemarketing/max_laser_distance')
+        self.number_observations = rospy.get_param('/telemarketing/n_observations')
         
         # Get Desired Point to Get
         self.desired_point = Point()
@@ -65,26 +57,23 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         
         # We create two arrays based on the binary values that will be assigned
         # In the discretization method.
-        laser_scan = self._check_laser_scan_ready()
-        num_laser_readings = len(laser_scan.ranges)/self.new_ranges
-        high = numpy.full((num_laser_readings), self.max_laser_value)
-        low = numpy.full((num_laser_readings), self.min_laser_value)
-        
+        laser_scan = self.get_laser_scan()
+        rospy.logdebug("laser_scan len===>" + str(len(laser_scan.ranges)))
+
         # We only use two integers
-        self.observation_space = spaces.Box(low, high)
-        
+        self.observation_space = spaces.Box(low=0, high=self.max_laser_distance, shape=(1, self.number_observations), dtype=np.float)
+
         rospy.logdebug("ACTION SPACES TYPE===>"+str(self.action_space))
         rospy.logdebug("OBSERVATION SPACES TYPE===>"+str(self.observation_space))
-        
+
         # Rewards
-        self.forwards_reward = rospy.get_param("/telemarketing/forwards_reward")
-        self.turn_reward = rospy.get_param("/telemarketing/turn_reward")
-        self.end_episode_points = rospy.get_param("/telemarketing/end_episode_points")
-
-        self.cumulated_steps = 0.0
-
-        # Here we will add any init functions prior to starting the MyRobotEnv
-        super(TelemarketingEmptyEnv, self).__init__()
+        self.reward_goal = rospy.get_param("/telemarketing/reward_goal")
+        self.reward_towards_goal = rospy.get_param("/telemarketing/reward_towards_goal")
+        self.reward_away_from_goal = rospy.get_param("/telemarketing/reward_away_from_goal")
+        self.reward_hit = rospy.get_param("/telemarketing/reward_hit")
+        self.reward_time_out = rospy.get_param("/telemarketing/reward_time_out")
+        self.reverse_reward = rospy.get_param("/telemarketing/reverse_reward")
+        self.min_laser_distance_for_crashing = rospy.get_param("/telemarketing/min_laser_distance_for_crashing")
 
     def _set_init_pose(self):
         """Sets the Robot in its init pose
@@ -114,28 +103,45 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
 
     def _set_action(self, action):
         """
-        This set action will Set the linear and angular speed of the turtlebot2
+        This set action will Set the linear and angular speed of the Telemarketing
         based on the action number given.
         :param action: The action integer that set s what movement to do next.
         """
-        
+        discrete_action_list = ["forward", "left", "right", "strong_left", "strong_right", "backward", "stop"]
+        # action_discrete_map = {
+        #                 "forward": [0.4, 0],
+        #                 "left": [0.3, 0.3],
+        #                 "right": [0.3, -0.3],
+        #                 "strong_left": [0, 0.6],
+        #                 "strong_right": [0, -0.6],
+        #                 "backward": [-0.4, 0],
+        #                 "stop": [0, 0]
+        #             }
         rospy.logdebug("Start Set Action ==>"+str(action))
         # We convert the actions to speed movements to send to the parent class CubeSingleDiskEnv
-        if action == 0: #FORWARD
-            linear_speed = self.linear_forward_speed
+        if action == 0: #forward
+            linear_speed = self.max_linear_speed
             angular_speed = 0.0
-            self.last_action = "FORWARDS"
-        elif action == 1: #LEFT
-            linear_speed = self.linear_turn_speed
-            angular_speed = self.angular_speed
-            self.last_action = "TURN_LEFT"
-        elif action == 2: #RIGHT
-            linear_speed = self.linear_turn_speed
-            angular_speed = -1*self.angular_speed
-            self.last_action = "TURN_RIGHT"
-
+        elif action == 1: #left
+            linear_speed = self.linear_speed_turning
+            angular_speed = self.angular_speed_turning
+        elif action == 2: #right
+            linear_speed = self.linear_speed_turning
+            angular_speed = -1*self.angular_speed_turning
+        elif action == 3: #strong_left
+            linear_speed = 0.0
+            angular_speed = self.max_angular_speed
+        elif action == 4: #strong_right
+            linear_speed = 0.0
+            angular_speed = -1*self.max_angular_speed
+        elif action == 5: #backward
+            linear_speed = -1*self.max_linear_speed
+            angular_speed = 0.0
+        elif action == 6: #stop
+            linear_speed = 0.0
+            angular_speed = 0.0
+        self.last_action=discrete_action_list[action]
         
-        # We tell TurtleBot2 the linear and angular speed to set to execute
         self.move_base(linear_speed, angular_speed, epsilon=0.05, update_rate=10)
         
         rospy.logdebug("END Set Action ==>"+str(action))
@@ -148,25 +154,33 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         :return:
         """
         rospy.logdebug("Start Get Observation ==>")
-        # We get the laser scan data
-        laser_scan = self.get_laser_scan()
-        
-        discretized_laser_scan = self.discretize_observation( laser_scan,
-                                                                self.new_ranges
-                                                                )
-                                                                
-                                                                
-        # We get the odometry so that SumitXL knows where it is.
+        # Odometry data
         odometry = self.get_odom()
         x_position = odometry.pose.pose.position.x
         y_position = odometry.pose.pose.position.y
+        orientation_q = odometry.pose.pose.orientation
+        orientation_list = [orientation_q.x, orientation_q.y, orientation_q.z, orientation_q.w]
+        (_, _, yaw) = euler_from_quaternion(orientation_list)
+        angle = np.degrees(yaw)
 
-        # We round to only two decimals to avoid very big Observation space
-        odometry_array = [round(x_position, 2),round(y_position, 2)]
+        #OBSERVATIONS
+        # We get the laser scan data
+        laser_scan = self.get_laser_scan()
+        observation_laser_scan = laser_scan.ranges
+        #Distance to goal
+        current_position = Point()
+        current_position.x = x_position
+        current_position.y = y_position
+        current_position.z = 0.0
+        distance_from_des_point = self.get_distance_from_desired_point(current_position)
+                                                                        
+        #Angle error                                                 
+        angle_to_goal = self.angle_to_goal(current_position)
+        angular_error = angle_to_goal-angle
+        if angular_error>180:
+            angular_error=-(360-angular_error)
 
-        # We only want the X and Y position and the Yaw
-
-        observations = discretized_laser_scan + odometry_array
+        observations = observation_laser_scan + [distance_from_des_point, angular_error]
 
         rospy.logdebug("Observations==>"+str(observations))
         rospy.logdebug("END Get Observation ==>")
@@ -174,44 +188,11 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         
 
     def _is_done(self, observations):
-        
+        self._episode_done = self.has_crashed(self, self.min_laser_distance_for_crashing)
         if self._episode_done:
-            rospy.logerr("Telemarketing is Too Close to wall==>")
+            rospy.logerr("Telemarketing has crashed==>")
         else:
-            rospy.logerr("Telemarketing didnt crash at least ==>")
-       
-       
-            current_position = Point()
-            current_position.x = observations[-2]
-            current_position.y = observations[-1]
-            current_position.z = 0.0
-            
-            MAX_X = 6.0
-            MIN_X = -1.0
-            MAX_Y = 3.0
-            MIN_Y = -3.0
-            
-            # We see if we are outside the Learning Space
-            
-            if current_position.x <= MAX_X and current_position.x > MIN_X:
-                if current_position.y <= MAX_Y and current_position.y > MIN_Y:
-                    rospy.logdebug("Telemarketing Position is OK ==>["+str(current_position.x)+","+str(current_position.y)+"]")
-                    
-                    # We see if it got to the desired point
-                    if self.is_in_desired_position(current_position):
-                        self._episode_done = True
-                    
-                    
-                else:
-                    rospy.logerr("Telemarketing to Far in Y Pos ==>"+str(current_position.x))
-                    self._episode_done = True
-            else:
-                rospy.logerr("Telemarketing to Far in X Pos ==>"+str(current_position.x))
-                self._episode_done = True
-            
-            
-            
-
+            rospy.logerr("Telemarketing didnt crash at least ==>")  
         return self._episode_done
 
     def _compute_reward(self, observations, done):
@@ -227,25 +208,22 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
 
         if not done:
             
-            if self.last_action == "FORWARDS":
-                reward = self.forwards_reward
-            else:
-                reward = self.turn_reward
+            #TODO: Reward when navigates in reverse
                 
             # If there has been a decrease in the distance to the desired point, we reward it
             if distance_difference < 0.0:
-                rospy.logwarn("DECREASE IN DISTANCE GOOD")
-                reward += self.forwards_reward
+                rospy.logwarn("Towards goal")
+                reward += self.reward_towards_goal
             else:
-                rospy.logerr("ENCREASE IN DISTANCE BAD")
-                reward += 0
+                rospy.logerr("Away goal")
+                reward -= self.reward_away_from_goal
                 
         else:
             
             if self.is_in_desired_position(current_position):
-                reward = self.end_episode_points
+                reward = self.reward_goal
             else:
-                reward = -1*self.end_episode_points
+                reward = -1*self.reward_hit
 
 
         self.previous_distance_from_des_point = distance_from_des_point
@@ -260,40 +238,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         return reward
 
 
-    # Internal TaskEnv Methods
-    
-    def discretize_observation(self,data,new_ranges):
-        """
-        Discards all the laser readings that are not multiple in index of new_ranges
-        value.
-        """
-        self._episode_done = False
-        
-        discretized_ranges = []
-        mod = len(data.ranges)/new_ranges
-        
-        rospy.logdebug("data=" + str(data))
-        rospy.logwarn("new_ranges=" + str(new_ranges))
-        rospy.logwarn("mod=" + str(mod))
-        
-        for i, item in enumerate(data.ranges):
-            if (i%mod==0):
-                if item == float ('Inf') or numpy.isinf(item):
-                    discretized_ranges.append(self.max_laser_value)
-                elif numpy.isnan(item):
-                    discretized_ranges.append(self.min_laser_value)
-                else:
-                    discretized_ranges.append(int(item))
-                    
-                if (self.min_range > item > 0):
-                    rospy.logerr("done Validation >>> item=" + str(item)+"< "+str(self.min_range))
-                    self._episode_done = True
-                else:
-                    rospy.logwarn("NOT done Validation >>> item=" + str(item)+"< "+str(self.min_range))
-                    
-
-        return discretized_ranges
-        
+    # Internal TaskEnv Methods    
         
     def is_in_desired_position(self,current_position, epsilon=0.05):
         """
@@ -336,10 +281,14 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         :param p_end:
         :return:
         """
-        a = numpy.array((pstart.x, pstart.y, pstart.z))
-        b = numpy.array((p_end.x, p_end.y, p_end.z))
+        a = np.array((pstart.x, pstart.y, pstart.z))
+        b = np.array((p_end.x, p_end.y, p_end.z))
     
-        distance = numpy.linalg.norm(a - b)
+        distance = np.linalg.norm(a - b)
     
         return distance
+    
+    def angle_to_goal(self, current_position):
+        return np.atan2(np.degrees(math.atan2(self.desired_point.y - current_position.y, self.desired_point.x - current_position.x)))
+
 
