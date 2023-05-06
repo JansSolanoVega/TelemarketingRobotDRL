@@ -9,7 +9,7 @@ telemarketing: #namespace
     gamma: 0.7
     epsilon: 0.9
     epsilon_discount: 0.999
-    nepisodes: 500
-    nsteps: 500
+    nepisodes: 100000000
+    nsteps: 100000000
     running_step: 0.06 # Time for each step
 

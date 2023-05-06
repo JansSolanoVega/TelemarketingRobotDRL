@@ -73,7 +73,7 @@ if __name__ == '__main__':
             # Execute the action in the environment and get feedback
             observation, reward, done, info = env.step(action)
 
-            rospy.logwarn(str(observation) + " " + str(reward))
+            #rospy.logwarn(str(observation) + " " + str(reward))
             cumulated_reward += reward
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
@@ -81,11 +81,11 @@ if __name__ == '__main__':
             nextState = ''.join(map(str, observation))
 
             # Make the algorithm learn based on the results
-            rospy.logwarn("# state we were=>" + str(state))
+            #rospy.logwarn("# state we were=>" + str(state))
             rospy.logwarn("# action that we took=>" + str(action))
             rospy.logwarn("# reward that action gave=>" + str(reward))
             rospy.logwarn("# episode cumulated_reward=>" + str(cumulated_reward))
-            rospy.logwarn("# State in which we will start next step=>" + str(nextState))
+            #rospy.logwarn("# State in which we will start next step=>" + str(nextState))
             qlearn.learn(state, action, reward, nextState)
 
             if not (done):

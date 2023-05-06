@@ -303,7 +303,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         return discretized_ranges
         
         
-    def is_in_desired_position(self,current_position, epsilon=0.05):
+    def is_in_desired_position(self,current_position, epsilon=0.5):
         """
         It return True if the current position is similar to the desired poistion
         """

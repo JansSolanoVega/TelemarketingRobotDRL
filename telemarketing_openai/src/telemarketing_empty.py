@@ -10,6 +10,7 @@ from openai_ros.task_envs.task_commons import LoadYamlFileParamsTest
 from openai_ros.openai_ros_common import ROSLauncher
 from openai_ros.robot_envs import telemarketing_env
 
+
 timestep_limit_per_episode = 10000 # Can be any Value
 
 register(
@@ -100,6 +101,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         odometry = self.get_odom()
         self.previous_distance_from_des_point = self.get_distance_from_desired_point(odometry.pose.pose.position)
 
+        self.cumulated_steps = 0.0
 
     def _set_action(self, action):
         """
@@ -165,50 +167,65 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
 
         #OBSERVATIONS
         # We get the laser scan data
-        laser_scan = self.get_laser_scan()
-        observation_laser_scan = laser_scan.ranges
+        laser_scan = np.array(self.get_laser_scan().ranges)
+        laser_scan = list(np.where(np.isinf(laser_scan), 10.0, laser_scan))
+        
         #Distance to goal
-        current_position = Point()
-        current_position.x = x_position
-        current_position.y = y_position
-        current_position.z = 0.0
-        distance_from_des_point = self.get_distance_from_desired_point(current_position)
+        self.current_position = Point()
+        self.current_position.x = x_position
+        self.current_position.y = y_position
+        self.current_position.z = 0.0
+        distance_from_des_point = self.get_distance_from_desired_point(self.current_position)
                                                                         
         #Angle error                                                 
-        angle_to_goal = self.angle_to_goal(current_position)
+        angle_to_goal = self.angle_to_goal(self.current_position)
         angular_error = angle_to_goal-angle
         if angular_error>180:
             angular_error=-(360-angular_error)
 
-        observations = observation_laser_scan + [distance_from_des_point, angular_error]
+        observations = laser_scan.copy()
+        #print(observations)
+        observations.append(distance_from_des_point);observations.append(angular_error)
 
-        rospy.logdebug("Observations==>"+str(observations))
+        #rospy.logdebug("Observations==>"+str(observations))
         rospy.logdebug("END Get Observation ==>")
         return observations
         
 
     def _is_done(self, observations):
-        self._episode_done = self.has_crashed(self, self.min_laser_distance_for_crashing)
-        if self._episode_done:
-            rospy.logerr("Telemarketing has crashed==>")
-        else:
-            rospy.logerr("Telemarketing didnt crash at least ==>")  
-        return self._episode_done
-
-    def _compute_reward(self, observations, done):
-
+        '''
         current_position = Point()
         current_position.x = observations[-2]
         current_position.y = observations[-1]
-        current_position.z = 0.0
+        current_position.z = 0.0'''
+        #print(self.current_position.x, "--", self.current_position.y)
+        if self.is_in_desired_position(self.current_position):
+            self._episode_done = True
+            rospy.logwarn("GOAL REACHED==>")
+            #self.desired_point.x = np.round(np.random.uniform(-8, 8), 1)
+            #self.desired_point.y = np.round(np.random.uniform(-8, 8), 1)
+            #rospy.logwarn("NEW GOAL==>", "x: ",self.desired_point.x, "y: ", self.desired_point.y)
+            #print("ga")
+        else:
+            self._episode_done = self.has_crashed(self.min_laser_distance_for_crashing)
+            if self._episode_done:
+                rospy.logwarn("Telemarketing has crashed==>")
+            else:
+                rospy.logwarn("Telemarketing didnt crash at least ==>")  
+        return self._episode_done
 
-        distance_from_des_point = self.get_distance_from_desired_point(current_position)
+    def _compute_reward(self, observations, done):
+        reward = 0
+        '''current_position = Point()
+        current_position.x = observations[-2]
+        current_position.y = observations[-1]
+        current_position.z = 0.0'''
+
+        distance_from_des_point = self.get_distance_from_desired_point(self.current_position)
         distance_difference =  distance_from_des_point - self.previous_distance_from_des_point
 
 
         if not done:
-            
-            #TODO: Reward when navigates in reverse
                 
             # If there has been a decrease in the distance to the desired point, we reward it
             if distance_difference < 0.0:
@@ -220,7 +237,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
                 
         else:
             
-            if self.is_in_desired_position(current_position):
+            if self.is_in_desired_position(self.current_position):
                 reward = self.reward_goal
             else:
                 reward = -1*self.reward_hit
@@ -240,7 +257,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
 
     # Internal TaskEnv Methods    
         
-    def is_in_desired_position(self,current_position, epsilon=0.05):
+    def is_in_desired_position(self,current_position, epsilon=0.15):
         """
         It return True if the current position is similar to the desired poistion
         """
@@ -256,6 +273,7 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         x_current = current_position.x
         y_current = current_position.y
         
+        #print(x_current,"-",)
         x_pos_are_close = (x_current <= x_pos_plus) and (x_current > x_pos_minus)
         y_pos_are_close = (y_current <= y_pos_plus) and (y_current > y_pos_minus)
         
@@ -289,6 +307,6 @@ class TelemarketingEmptyEnv(telemarketing_env.TelemarketingEnv):
         return distance
     
     def angle_to_goal(self, current_position):
-        return np.atan2(np.degrees(math.atan2(self.desired_point.y - current_position.y, self.desired_point.x - current_position.x)))
+        return np.degrees(math.atan2(self.desired_point.y - current_position.y, self.desired_point.x - current_position.x))
 
 
