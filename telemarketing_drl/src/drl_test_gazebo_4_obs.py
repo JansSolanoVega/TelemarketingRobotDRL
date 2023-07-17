@@ -9,6 +9,8 @@ from geometry_msgs.msg import Twist
 
 from tf.transformations import euler_from_quaternion
 from stable_baselines import DQN, A2C, PPO2
+import os
+
 class DRL_test:
     def __init__(self, path_temp_model, algorithm, continuous_actions, goal, numObsNoLaser):
         self.continuous_space=continuous_actions
@@ -102,8 +104,8 @@ class DRL_test:
 
 if __name__ == '__main__':
     try:
-        algo = DRL_test(path_temp_model="best_model_DQN_StaticEnvironmentDiscrete_RestartHit_5Obstacles_RewardReverseNone", algorithm="DQN",#best_model_a2c_laser_corrected
-                    continuous_actions=0, goal=(6,6), numObsNoLaser=4)
+        algo = DRL_test(path_temp_model=os.path.join("models", "best_model_PPO_Static.5.0_Discrete_25e-5_RewardHit.-20"), algorithm="PPO2",#best_model_a2c_laser_corrected
+                    continuous_actions=0, goal=(0,-4), numObsNoLaser=4)
         
     except rospy.ROSInterruptException:
         pass

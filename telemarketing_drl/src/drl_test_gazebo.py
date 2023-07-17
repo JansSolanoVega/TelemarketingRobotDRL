@@ -103,7 +103,7 @@ class DRL_test:
 if __name__ == '__main__':
     try:
         algo = DRL_test(path_temp_model="models/best_model_PPO2_StaticEnvironmentDiscrete_RestartHit_5Obstacles_RewardHitNone", algorithm="PPO2",#best_model_a2c_laser_corrected
-                    continuous_actions=0, goal=(-3,3))
+                    continuous_actions=0, goal=(1,3))
         
     except rospy.ROSInterruptException:
         pass
