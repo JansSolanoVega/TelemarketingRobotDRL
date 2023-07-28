@@ -8,7 +8,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 
 from tf.transformations import euler_from_quaternion
-from stable_baselines import DQN, A2C, PPO2
+from stable_baselines import DQN, A2C, PPO2, SAC
 import os
 
 class DRL_test:
@@ -29,6 +29,9 @@ class DRL_test:
             self.model = A2C.load(path_temp_model)
         elif algorithm=="PPO2":
             self.model = PPO2.load(path_temp_model)
+        elif algorithm=="SAC":
+            self.model = SAC.load(path_temp_model)
+            
         
         self.eval_model()
         rospy.spin()
@@ -104,8 +107,8 @@ class DRL_test:
 
 if __name__ == '__main__':
     try:
-        algo = DRL_test(path_temp_model=os.path.join("models", "best_model_PPO_Static.5.0_Discrete_25e-5_RewardHit.-20"), algorithm="PPO2",#best_model_a2c_laser_corrected
-                    continuous_actions=0, goal=(0,-4), numObsNoLaser=4)
+        algo = DRL_test(path_temp_model=os.path.join("models", "best_model_SAC_Static.5.0_Continuous_25e-5_ConstantActiveReward.10_MaxAvoidanceReward.10_RateDecay.5"), algorithm="SAC",#best_model_a2c_laser_corrected
+                    continuous_actions=1, goal=(0,-10), numObsNoLaser=4)
         
     except rospy.ROSInterruptException:
         pass
