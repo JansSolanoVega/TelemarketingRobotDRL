@@ -362,10 +362,10 @@
           </surface>
         </collision>
         <visual name="Wall_11_Visual_7">
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
           <material>
@@ -382,10 +382,10 @@
         <collision name="Wall_11_Collision_7">
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>

@@ -7,10 +7,10 @@
   <arg name="yaw" default="0"/> 
 
   <arg name="nombre_archivo" default="MundoConcentrado"/>
-  
-  <arg name="numero_obstaculos" default="4"/>
+
+  <arg name="numero_obstaculos" default="8"/>
   <arg name="velocidad" default="0.3"/>
-  <arg name="tipo_movimiento" default="0_Aleatorio"/>
+  <arg name="tipo_movimiento" default="2_MismaDireccion"/> <!--0_Aleatorio, 1_Cruce, 2_MismaDireccion, 3_MundoObstaculosEstaticos, 4_MundoVacio-->
 
   <!--Building a world with input requirements-->
   <node pkg="telemarketing_gazebo" type="AutomatizacionCreacionDeMundo.py" name="AutomatizacionCreacionDeMundo" output="screen">

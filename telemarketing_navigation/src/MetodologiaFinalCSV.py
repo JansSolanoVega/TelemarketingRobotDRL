@@ -10,12 +10,17 @@ from gazebo_msgs.msg import ModelStates
 import message_filters
 import math
 import pandas as pd 
+from rospkg import RosPack
+import os
+from rosgraph_msgs.msg import Clock
 
 filename=rospy.get_param('MetodologiaFinalCSV/filename')
 navegador=rospy.get_param('MetodologiaFinalCSV/navegador')
 num_obstaculos=rospy.get_param('MetodologiaFinalCSV/numero_obstaculos')
 tipo_movimiento=rospy.get_param('MetodologiaFinalCSV/tipo_movimiento')
 
+packageName = "telemarketing_navigation"
+rospack = RosPack(); package_path = rospack.get_path(packageName)
 
 ##INICIALIZACION
 distancia=list()
@@ -31,7 +36,7 @@ lista=[]
 cantidad_navegaciones_exportar_csv=int(rospy.get_param('MetodologiaFinalCSV/numero_intentos'))+1
 current_navegaciones=0
 
-diccionario={"teb":"/move_base/TebLocalPlannerROS/global_plan","dwa":"/move_base/DWAPlannerROS/global_plan","mpc":"/move_base/MpcLocalPlannerROS/global_plan"}
+diccionario={"SAC_Mapless":"","teb":"/move_base/TebLocalPlannerROS/global_plan","dwa":"/move_base/DWAPlannerROS/global_plan","mpc":"/move_base/MpcLocalPlannerROS/global_plan"}
 for i in range(1000):
     distancia.append(0)
     entro_zona_colision.append(0)
@@ -102,15 +107,15 @@ def callback(odometria, model_states):
 def callback1(mensaje_goal):
     global tiempo_inicio_navegacion,cantidad_colisiones
     global LongitudTotal,cont,tiempo_ego_score
-    tiempo_inicio_navegacion=time.time()
+    tiempo_inicio_navegacion=current_time
     cantidad_colisiones=0
     LongitudTotal=0
     cont=0
     tiempo_ego_score=0
 ##LLEGADA 
 def callback2(mensaje_llegada):
-    global lista,current_navegaciones
-    tiempo_navegacion=time.time()-tiempo_inicio_navegacion
+    global lista,current_navegaciones, goalReached
+    tiempo_navegacion=current_time-tiempo_inicio_navegacion
     if tiempo_navegacion>10:                    
         print("Tiempo total de navegacion: "+str(tiempo_navegacion)+" segundos")
         print("Cantidad de colisiones: "+str(cantidad_colisiones))
@@ -119,22 +124,29 @@ def callback2(mensaje_llegada):
         print("Recorrido total de navegacion: "+str(LongitudTotal)+" metros")
         print("Recorrido total de global planner: "+str(LongitudTotalGlobalPlanner)+" metros")
         current_navegaciones+=1
-        if(current_navegaciones>1):
+        if current_navegaciones>1:
             lista.append({
                 'Tiempo_total': tiempo_navegacion,
                 'Cantidad_Colisiones': cantidad_colisiones,
                 'EGO_SCORE': ego_score,
                 'Recorrido_total': LongitudTotal,
-                'Recorrido global path': LongitudTotalGlobalPlanner
-            })
-        print(lista)
+                #'Recorrido global path': LongitudTotalGlobalPlanner
+            })    
+
+            print(lista)
         df = pd.DataFrame(lista)
         df.loc[20]=df.mean().values
         names = df.index.tolist()
         names[len(names)-1]='PROMEDIO'
         df.index = names
         print(df)
-        df.to_csv('/home/zetans/ros_ws/src/Telemarketing_Robot/telemarketing_navigation/src/resultados/'+tipo_movimiento+'/'+str(num_obstaculos)+'_Actores/'+filename+'.csv')
+        folder = os.path.join(package_path,'src','resultados',tipo_movimiento,str(num_obstaculos)+'_Actores')
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            print(f"Carpeta '{folder}' creada correctamente.")
+        else:
+            print(f"La carpeta '{folder}' ya existe.")
+        df.to_csv(os.path.join(folder,filename+'.csv'))
 
 ##RECORRIDO TOTAL
 def callback3(odometry_msg):
@@ -169,6 +181,12 @@ def callback4(path_msg):
         LongitudTotalGlobalPlanner=path_length
     cont+=1
 
+current_time = None
+
+def clock_callback(msg):
+    global current_time
+    current_time = msg.clock.to_sec()
+
 rospy.init_node('suscriptor')
 
 odom_sub = message_filters.Subscriber('odom', Odometry)
@@ -179,6 +197,7 @@ ts.registerCallback(callback)
 rospy.Subscriber("move_base/goal", MoveBaseActionGoal, callback1)
 rospy.Subscriber("move_base/result", MoveBaseActionResult, callback2)
 rospy.Subscriber("/odom", Odometry, callback3)
-rospy.Subscriber(diccionario[navegador], Path, callback4)
+rospy.Subscriber('/clock', Clock, clock_callback)
+#rospy.Subscriber(diccionario[navegador], Path, callback4)
 
 rospy.spin()

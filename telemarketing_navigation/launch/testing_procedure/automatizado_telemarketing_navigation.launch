@@ -4,13 +4,13 @@
   <arg name="open_rviz" default="true"/>
   <arg name="move_forward_only" default="true"/>
   
-  <arg name="algoritmoNavegacion" default="mpc"/>
+  <arg name="algoritmoNavegacion" default="teb"/>
   <arg name="numero_intentos" default="10"/>
 
-  <arg name="numero_obstaculos" default="0"/>
+  <arg name="numero_obstaculos" default="8"/>
   <arg name="velocidad" default="0.3"/>
-  <arg name="tipo_movimiento" default="4_MundoVacio"/>
-
+  <arg name="tipo_movimiento" default="2_MismaDireccion"/> <!--0_Aleatorio, 1_Cruce, 2_MismaDireccion, 3_MundoObstaculosEstaticos, 4_MundoVacio-->
+  
   <!-- Map server -->
   <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)"/>
 
@@ -34,8 +34,8 @@
       <rosparam param="p_final">[-10,9,0]</rosparam>
       <rosparam param="angle_sequence">[90,0]</rosparam>
       <param name="numero_intentos" type="double" value="$(arg numero_intentos)" />
-  </node> 
-
+  </node>
+  
   <!--package to run testing procedute to evaluate the navigation-->
   <node pkg="telemarketing_navigation" type="MetodologiaFinalCSV.py" name="MetodologiaFinalCSV" output="screen">
     <param name="filename" type="str" value="$(arg algoritmoNavegacion)_$(arg velocidad)" />
@@ -43,7 +43,6 @@
     <param name="navegador" type="str" value="$(arg algoritmoNavegacion)"/>
     <param name="numero_obstaculos" type="int" value="$(arg numero_obstaculos)"/>
     <param name="tipo_movimiento" type="str" value="$(arg tipo_movimiento)"/>
-
   </node> 
 
   <!--package of laser filters-->

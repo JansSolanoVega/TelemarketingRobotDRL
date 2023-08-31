@@ -84,10 +84,11 @@ class MoveBaseSeq():
         #print(str(self.pose_seq[self.goal_cnt]))
         a=1
     def done_cb(self, status, result):
-        print(status)
-        print(result)
+        #print(status)
+        #print(result)
         print("raa")
-        self.tiempo_transcurrido=time.time()-self.tiempo_anterior  
+        self.tiempo_transcurrido=time.time()-self.tiempo_anterior 
+        
         if status == 2:
             rospy.loginfo("Goal pose "+str(self.goal_cnt)+" received a cancel request after it started executing, completed execution!")
         if(self.tiempo_transcurrido>10):
@@ -112,8 +113,9 @@ class MoveBaseSeq():
                 next_goal.target_pose.header.stamp = rospy.Time.now()
                 next_goal.target_pose.pose = self.pose_seq[self.goal_cnt]
                 rospy.loginfo("Sending goal pose "+str(self.goal_cnt+1)+" to Action Server")
-                rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
+                #rospy.loginfo(str(self.pose_seq[self.goal_cnt]))
                 self.client.send_goal(next_goal, self.done_cb, self.active_cb, self.feedback_cb) 
+                
             else:
                 rospy.loginfo("Final goal pose reached!")
                 rospy.signal_shutdown("Final goal pose reached!")
@@ -150,8 +152,9 @@ class MoveBaseSeq():
         goal.target_pose.header.stamp = rospy.Time.now() 
         goal.target_pose.pose = self.pose_seq[self.goal_cnt]
         rospy.loginfo("Sending goal pose "+str(self.goal_cnt+1)+" to Action Server")
-        rospy.loginfo("Posicion: "+str(self.pose_seq[self.goal_cnt]))
+        #rospy.loginfo("Posicion: "+str(self.pose_seq[self.goal_cnt]))
         self.client.send_goal(goal, self.done_cb, self.active_cb, self.feedback_cb)
+        wa = self.client.wait_for_result()
         #rospy.Subscriber("gazebo/model_states", ModelStates, self.callback)
         rospy.spin()
 

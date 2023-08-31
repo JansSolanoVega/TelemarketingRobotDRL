@@ -9,7 +9,7 @@
   <param name="robot_description" command="$(find xacro)/xacro $(find telemarketing_description)/urdf/telemarketing.xacro"/>
   <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-urdf -model telemarketing -x $(arg x_pos) -y $(arg y_pos) -z $(arg z_pos) -R $(arg roll) -P $(arg pitch) -Y $(arg yaw) -param robot_description"/>
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find telemarketing_drl)/worlds/Testing/MundoVacio.world"/>
+    <arg name="world_name" value="$(find telemarketing_drl)/worlds/Testing/Mundo_4_Cruzando.world"/>
     <!--<arg name="world_name" value="$(find telemarketing_drl)/worlds/DRL_Training/EmptyWorld_8size/empty_8size.world"/>-->
     <!--staticWorld_4, empty_8size-->
     <arg name="paused" value="false"/>

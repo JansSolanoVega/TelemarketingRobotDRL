@@ -31,7 +31,7 @@
         <limit_y_inf>-4.5</limit_y_inf>
         <limit_x_sup>1.0</limit_x_sup>
         <limit_y_sup>-7.5</limit_y_sup>
-        <velocidad>0.3</velocidad>
+        <velocidad>0.4</velocidad>
 
         <targets>
             <target>0 -6 0</target>
@@ -61,7 +61,7 @@
         <limit_y_inf>0.5</limit_y_inf>
         <limit_x_sup>0.5</limit_x_sup>
         <limit_y_sup>-2.5</limit_y_sup>
-        <velocidad>0.3</velocidad>
+        <velocidad>0.4</velocidad>
 
         <targets>
             <target>-1 -1 0</target>
@@ -91,7 +91,7 @@
         <limit_y_inf>5.5</limit_y_inf>
         <limit_x_sup>-1.0</limit_x_sup>
         <limit_y_sup>2.5</limit_y_sup>
-        <velocidad>0.3</velocidad>
+        <velocidad>0.4</velocidad>
 
         <targets>
             <target>-3 4 0</target>
@@ -121,7 +121,7 @@
         <limit_y_inf>10</limit_y_inf>
         <limit_x_sup>-4.0</limit_x_sup>
         <limit_y_sup>7</limit_y_sup>
-        <velocidad>0.3</velocidad>
+        <velocidad>0.4</velocidad>
 
         <targets>
             <target>-5.5 8.5 0</target>
@@ -688,10 +688,10 @@
           </surface>
         </collision>
         <visual name="Wall_11_Visual_7">
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
           <material>
@@ -708,10 +708,10 @@
         <collision name="Wall_11_Collision_7">
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>

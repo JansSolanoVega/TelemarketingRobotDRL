@@ -6,23 +6,24 @@ import time
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-
+from geometry_msgs.msg import PoseStamped
 from tf.transformations import euler_from_quaternion
 from stable_baselines import DQN, A2C, PPO2, SAC
 import os
 
 class DRL_test:
-    def __init__(self, path_temp_model, algorithm, continuous_actions, goal, numObsNoLaser):
+    def __init__(self, path_temp_model, algorithm, continuous_actions, numObsNoLaser):
         self.continuous_space=continuous_actions
         self.algorithm = algorithm
-        self.goal_x = goal[0];self.goal_y = goal[1]
         self.numObsNoLaser = numObsNoLaser
 
         rospy.init_node('drl_gazebo', anonymous=True)
         rospy.Subscriber('/scan', LaserScan, self.read_laser_data_gazebo)
         rospy.Subscriber('/odom', Odometry, self.read_odometry)
+        rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.goal_callback)
+        self.goal_pub = rospy.Publisher('/move_base_simple/goal', PoseStamped, queue_size=10)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-        
+        self.goal_x=0; self.goal_y=0
         if algorithm=="DQN":
             self.model = DQN.load(path_temp_model)
         elif algorithm=="A2C":
@@ -31,11 +32,29 @@ class DRL_test:
             self.model = PPO2.load(path_temp_model)
         elif algorithm=="SAC":
             self.model = SAC.load(path_temp_model)
-            
         
+        self.solicitarMeta()
         self.eval_model()
-        rospy.spin()
         
+        rospy.spin()
+
+    def goal_callback(self, data):
+        goal_pose = data.pose.position
+        self.goal_x = goal_pose.x;self.goal_y = goal_pose.y
+        print("Nueva meta asignada")
+        while self.distance_to_goal<0.3:
+            pass
+        self.eval_model()
+
+    def solicitarMeta(self):
+        position=input("Ingrese una nueva meta: ")
+        #try:
+        goal_msg = PoseStamped()
+        goal_msg.pose.position.x = float(position.split(",")[0])
+        goal_msg.pose.position.y = float(position.split(",")[1])
+        
+        self.goal_pub.publish(goal_msg)
+
     def read_laser_data_gazebo(self, data):
         self.ranges = np.array(data.ranges)
         self.ranges = list(np.where(np.isinf(self.ranges), 10.0, self.ranges))
@@ -61,7 +80,7 @@ class DRL_test:
         self.angular_error = self.angle_to_goal-self.angle
         if self.angular_error>180:
             self.angular_error=-(360-self.angular_error)
-        print(self.x, self.y)
+        #print(self.x, self.y)
         #print("Distancia: ", self.distance_to_goal)
         #print("Error posicion angular: ", self.angular_error)
         #print("time executing odometry: ",time.time()-a)
@@ -69,6 +88,7 @@ class DRL_test:
     def eval_model(self):
         twist = Twist()
         t_anterior=0
+        
         while self.distance_to_goal>0.3:
             #a=time.time()
             if (time.time()-t_anterior)>0.1:
@@ -101,14 +121,19 @@ class DRL_test:
                 t_anterior=time.time()     
         twist.linear.x = 0; twist.angular.z = 0
         self.pub.publish(twist)
+        print("Meta Alcanzada")
+        time.sleep(1)
+        self.solicitarMeta()
+        # except:
+        #     print('Posicion de meta incorrecta') 
         
 
     
 
 if __name__ == '__main__':
     try:
-        algo = DRL_test(path_temp_model=os.path.join("models", "best_model_SAC_Static.5.0_Continuous_25e-5_ConstantActiveReward.10_MaxAvoidanceReward.10_RateDecay.5"), algorithm="SAC",#best_model_a2c_laser_corrected
-                    continuous_actions=1, goal=(0,-10), numObsNoLaser=4)
+        algo = DRL_test(path_temp_model=os.path.join("models", "best_model_SAC_Dynamic.Human.8e-1.10.10_Continuous_25e-5_ConstantActiveReward.10_MaxAvoidanceReward.10_RateDecay.5_WithoutHitReward_re.8e-1_240Lidar_WithoutTF"), algorithm="SAC",#best_model_a2c_laser_corrected
+                    continuous_actions=1, numObsNoLaser=4)
         
     except rospy.ROSInterruptException:
         pass

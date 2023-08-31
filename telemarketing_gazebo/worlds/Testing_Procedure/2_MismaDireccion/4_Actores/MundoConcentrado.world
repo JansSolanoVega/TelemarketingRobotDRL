@@ -28,19 +28,19 @@
             <pose>0 -4.5 0 0 0 -1.5707963267948966</pose>
           </waypoint>
           <waypoint>
-            <time>10.0</time>
+            <time>7.5</time>
             <pose>1.8369701987210297e-16 -7.5 0 0 0 -1.5707963267948966</pose>
           </waypoint>
           <waypoint>
-            <time>10.5</time>
+            <time>8.0</time>
             <pose>1.8369701987210297e-16 -7.5 0 0 0 1.5707963267948966</pose>
           </waypoint>
           <waypoint>
-            <time>20.5</time>
+            <time>15.5</time>
             <pose>0 -4.5 0 0 0 1.5707963267948966</pose>
           </waypoint>
           <waypoint>
-            <time>21.0</time>
+            <time>16.0</time>
             <pose>0 -4.5 0 0 0 -1.5707963267948966</pose>
           </waypoint>
         </trajectory>
@@ -58,23 +58,23 @@
         <trajectory id="0" type="walking">
           <waypoint>
             <time>0</time>
-            <pose>-3.75 3 0 0 0 -1.1344640137963142</pose>
+            <pose>-3 1 0 0 0 2.01</pose>
           </waypoint>
           <waypoint>
-            <time>9.999999999999998</time>
-            <pose>-2.4821452147779017 0.2810766388900503 0 0 0 -1.1344640137963142</pose>
+            <time>7.421590126111789</time>
+            <pose>-3.72 3.88 0 0 0 2.01</pose>
           </waypoint>
           <waypoint>
-            <time>10.499999999999998</time>
-            <pose>-2.4821452147779017 0.2810766388900503 0 0 0 2.007128639793479</pose>
+            <time>7.921590126111789</time>
+            <pose>-3.72 3.88 0 0 0 -1.13</pose>
           </waypoint>
           <waypoint>
-            <time>20.499999999999996</time>
-            <pose>-3.75 3 0 0 0 2.007128639793479</pose>
+            <time>15.343180252223577</time>
+            <pose>-3 1 0 0 0 -1.13</pose>
           </waypoint>
           <waypoint>
-            <time>20.999999999999996</time>
-            <pose>-3.75 3 0 0 0 -1.1344640137963142</pose>
+            <time>15.843180252223577</time>
+            <pose>-3 1 0 0 0 2.01</pose>
           </waypoint>
         </trajectory>
       </script>
@@ -91,23 +91,23 @@
         <trajectory id="0" type="walking">
           <waypoint>
             <time>0</time>
-            <pose>0 0.5 0 0 0 2.007128639793479</pose>
+            <pose>-0.5 2 0 0 0 5.15</pose>
           </waypoint>
           <waypoint>
-            <time>10.0</time>
-            <pose>-1.267854785222098 3.21892336110995 0 0 0 2.007128639793479</pose>
+            <time>7.427693114285215</time>
+            <pose>0.23 -0.88 0 0 0 5.15</pose>
           </waypoint>
           <waypoint>
-            <time>10.5</time>
-            <pose>-1.267854785222098 3.21892336110995 0 0 0 5.148721293383272</pose>
+            <time>7.927693114285215</time>
+            <pose>0.23 -0.88 0 0 0 2.01</pose>
           </waypoint>
           <waypoint>
-            <time>20.5</time>
-            <pose>0 0.5 0 0 0 5.148721293383272</pose>
+            <time>15.35538622857043</time>
+            <pose>-0.5 2 0 0 0 2.01</pose>
           </waypoint>
           <waypoint>
-            <time>21.0</time>
-            <pose>0 0.5 0 0 0 2.007128639793479</pose>
+            <time>15.85538622857043</time>
+            <pose>-0.5 2 0 0 0 5.15</pose>
           </waypoint>
         </trajectory>
       </script>
@@ -127,19 +127,19 @@
             <pose>-8 9 0 0 0 0.0</pose>
           </waypoint>
           <waypoint>
-            <time>10.0</time>
+            <time>7.5</time>
             <pose>-5.0 9.0 0 0 0 0.0</pose>
           </waypoint>
           <waypoint>
-            <time>10.5</time>
+            <time>8.0</time>
             <pose>-5.0 9.0 0 0 0 3.141592653589793</pose>
           </waypoint>
           <waypoint>
-            <time>20.5</time>
+            <time>15.5</time>
             <pose>-8 9 0 0 0 3.141592653589793</pose>
           </waypoint>
           <waypoint>
-            <time>21.0</time>
+            <time>16.0</time>
             <pose>-8 9 0 0 0 0.0</pose>
           </waypoint>
         </trajectory>
@@ -700,10 +700,10 @@
           </surface>
         </collision>
         <visual name="Wall_11_Visual_7">
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
           <material>
@@ -720,10 +720,10 @@
         <collision name="Wall_11_Collision_7">
           <geometry>
             <box>
-              <size>3.47543 0.15 0.5</size>
+              <size>3.47543 0.15 2.5</size>
             </box>
           </geometry>
-          <pose>1.81962 0 2.25 0 -0 0</pose>
+          <pose>1.81962 0 1.25 0 -0 0</pose>
           <max_contacts>10</max_contacts>
           <surface>
             <contact>

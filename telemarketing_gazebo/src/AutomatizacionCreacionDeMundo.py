@@ -10,7 +10,7 @@ nombre_archivo=rospy.get_param('AutomatizacionCreacionDeMundo/nombre_archivo')
 tipo_movimiento=rospy.get_param('AutomatizacionCreacionDeMundo/tipo_movimiento')
 
 
-tree = ET.parse('/home/zetans/ros_ws/src/Telemarketing_Robot/telemarketing_gazebo/worlds/Testing_Procedure/'+tipo_movimiento+'/'+str(cantidad_de_actores)+'_Actores/'+nombre_archivo+'.world')
+tree = ET.parse('/home/telemarketing/ros_ws/src/TelemarketingRobotDRL/telemarketing_gazebo/worlds/Testing_Procedure/'+tipo_movimiento+'/'+str(cantidad_de_actores)+'_Actores/'+nombre_archivo+'.world')
 root=tree.getroot()
 
 actores=root[0]
@@ -43,4 +43,4 @@ else:
         plugin = actores[i][3]
         plugin[6].text = str(velocidad_requerida)
 
-tree.write('/home/zetans/ros_ws/src/Telemarketing_Robot/telemarketing_gazebo/worlds/Testing_Procedure/'+tipo_movimiento+'/'+str(cantidad_de_actores)+'_Actores/'+nombre_archivo+'.world')
+tree.write('/home/telemarketing/ros_ws/src/TelemarketingRobotDRL/telemarketing_gazebo/worlds/Testing_Procedure/'+tipo_movimiento+'/'+str(cantidad_de_actores)+'_Actores/'+nombre_archivo+'.world')

@@ -121,15 +121,15 @@
 
 <gazebo reference="lidar_1">
   <material>Gazebo/FlatBlack</material>
-  <sensor type="ray" name="lds_lfcd_sensor">
+  <sensor type="gpu_ray" name="lds_lfcd_sensor">
     <pose>0 0 0 0 0 0</pose>
     <visualize>true</visualize>
     <update_rate>5</update_rate>
     <ray>
       <scan>
         <horizontal>
-          <samples>72</samples>
-          <resolution>1</resolution>
+          <samples>240</samples>
+          <!-- <resolution>1</resolution> -->
           <min_angle>-2.1</min_angle>
           <max_angle>2.1</max_angle>
         </horizontal>
@@ -145,7 +145,7 @@
         <stddev>0.01</stddev>
       </noise>
     </ray>
-    <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_laser.so">
+    <plugin name="gazebo_ros_lds_lfcd_controller" filename="libgazebo_ros_gpu_laser.so">
       <topicName>scan</topicName>
       <frameName>lidar_1</frameName>
     </plugin>
